@@ -1,0 +1,12 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "test",
+      "group": "test",
+      "database": "${workspaceFolder:todoapi}/test.db"
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}
