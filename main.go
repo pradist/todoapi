@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -10,6 +14,12 @@ import (
 )
 
 func main() {
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Printf("please consider environment variables: %s", err)
+	}
+
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
@@ -24,8 +34,8 @@ func main() {
 		})
 	})
 
-	r.GET("/tokenz", auth.AccessToken("==signature=="))
-	protected := r.Group("", auth.Protect([]byte("==signature==")))
+	r.GET("/tokenz", auth.AccessToken(os.Getenv("SIGN")))
+	protected := r.Group("", auth.Protect([]byte(os.Getenv("SIGN"))))
 
 	handler := todo.NewTodoHandler(db)
 	protected.POST("/todos", handler.NewTask)
