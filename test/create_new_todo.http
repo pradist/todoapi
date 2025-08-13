@@ -5,13 +5,10 @@ GET {{base_url}}/tokenz
 
 ###
 
-@token = {{auth.token}}
-
-###
 POST {{base_url}}/todos
-Authorization: Bearer {{token}}
+Authorization: Bearer {{auth.token}}
 Content-Type: application/json
 
 {
-	"text": "test 2"
+  "text": "test 5"
 }
