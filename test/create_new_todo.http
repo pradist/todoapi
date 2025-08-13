@@ -1,13 +1,15 @@
 @base_url=http://localhost:8081
 
 # @name auth
-GET {{base_url}}/auth
----
+GET {{base_url}}/tokenz
 
-# create_todo
-# @ref auth
+###
+
+@token = {{auth.token}}
+
+###
 POST {{base_url}}/todos
-Authorization: Bearer {{auth.token}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
