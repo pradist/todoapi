@@ -5,3 +5,5 @@ coverage*
 
 test.db
 test*.txt
+
+todoapi
