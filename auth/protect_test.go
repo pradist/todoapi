@@ -45,7 +45,7 @@ func doProtectRequest(r *gin.Engine, authHeader string) *httptest.ResponseRecord
 	return w
 }
 
-// TestProtect_ValidToken: token ถูกตอง -> 200
+// TestProtect_ValidToken: valid token returns 200
 func TestProtect_ValidToken(t *testing.T) {
 	r := setupProtectRouter()
 	token := makeValidToken(t)
@@ -57,7 +57,7 @@ func TestProtect_ValidToken(t *testing.T) {
 	}
 }
 
-// TestProtect_MissingHeader: ไมมี Authorization header -> 401
+// TestProtect_MissingHeader: missing Authorization header returns 401
 func TestProtect_MissingHeader(t *testing.T) {
 	r := setupProtectRouter()
 
@@ -68,7 +68,7 @@ func TestProtect_MissingHeader(t *testing.T) {
 	}
 }
 
-// TestProtect_NoBearerPrefix: สง token โดยไมมี "Bearer " -> 401
+// TestProtect_NoBearerPrefix: token without "Bearer " prefix returns 401
 func TestProtect_NoBearerPrefix(t *testing.T) {
 	r := setupProtectRouter()
 	token := makeValidToken(t)
@@ -80,7 +80,7 @@ func TestProtect_NoBearerPrefix(t *testing.T) {
 	}
 }
 
-// TestProtect_ExpiredToken: token หมดอายุ -> 401
+// TestProtect_ExpiredToken: expired token returns 401
 func TestProtect_ExpiredToken(t *testing.T) {
 	r := setupProtectRouter()
 
@@ -97,7 +97,7 @@ func TestProtect_ExpiredToken(t *testing.T) {
 	}
 }
 
-// TestProtect_TamperedToken: token ถูกแกไข -> 401
+// TestProtect_TamperedToken: token with modified signature returns 401
 func TestProtect_TamperedToken(t *testing.T) {
 	r := setupProtectRouter()
 	token := makeValidToken(t)
@@ -110,14 +110,12 @@ func TestProtect_TamperedToken(t *testing.T) {
 	}
 }
 
-// TestProtect_WrongSigningMethod: token ใช้ alg อื่น (RS256) -> 401
+// TestProtect_WrongSigningMethod: token signed with a non-HMAC algorithm (RS256) returns 401
 func TestProtect_WrongSigningMethod(t *testing.T) {
 	r := setupProtectRouter()
 
-	// สราง token ที่มี header alg=HS256 แตถูก override เปน none ดวยการ craft manual
-	// วิธีงายสุดคือสง token ที่ parse ไดแต keyfunc ปฏิเสธ:
-	// ใช RSA header โดย craft token string แบบ manual
-	// header: {"alg":"RS256","typ":"JWT"} -> base64
+	// Craft a token with RS256 header so keyfunc rejects it
+	// header: {"alg":"RS256","typ":"JWT"} (base64-encoded)
 	fakeToken := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.invalid_sig"
 
 	w := doProtectRequest(r, "Bearer "+fakeToken)

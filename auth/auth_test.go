@@ -54,7 +54,7 @@ func doTokenRequest(t *testing.T, r *gin.Engine, body map[string]string) *httpte
 	return w
 }
 
-// TestAccessToken_Success: credential ถูกตอง -> 200 + token
+// TestAccessToken_Success: valid credentials return 200 with a token
 func TestAccessToken_Success(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
@@ -75,7 +75,7 @@ func TestAccessToken_Success(t *testing.T) {
 	}
 }
 
-// TestAccessToken_WrongPassword: password ผิด -> 401
+// TestAccessToken_WrongPassword: wrong password returns 401
 func TestAccessToken_WrongPassword(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
@@ -88,7 +88,7 @@ func TestAccessToken_WrongPassword(t *testing.T) {
 	}
 }
 
-// TestAccessToken_UserNotFound: username ไมมีใน DB -> 401
+// TestAccessToken_UserNotFound: unknown username returns 401
 func TestAccessToken_UserNotFound(t *testing.T) {
 	db := setupAuthTestDB(t)
 	r := setupAuthRouter(db)
@@ -100,7 +100,7 @@ func TestAccessToken_UserNotFound(t *testing.T) {
 	}
 }
 
-// TestAccessToken_MissingFields: body ขาด field -> 400
+// TestAccessToken_MissingFields: missing or empty required fields return 400
 func TestAccessToken_MissingFields(t *testing.T) {
 	db := setupAuthTestDB(t)
 	r := setupAuthRouter(db)
@@ -124,7 +124,7 @@ func TestAccessToken_MissingFields(t *testing.T) {
 	}
 }
 
-// TestAccessToken_InvalidJSON: JSON ผิดรูปแบบ -> 400
+// TestAccessToken_InvalidJSON: malformed JSON body returns 400
 func TestAccessToken_InvalidJSON(t *testing.T) {
 	db := setupAuthTestDB(t)
 	gin.SetMode(gin.TestMode)
@@ -141,8 +141,8 @@ func TestAccessToken_InvalidJSON(t *testing.T) {
 	}
 }
 
-// TestAccessToken_ErrorMessageHidden: username ผิดและ password ผิดตอง error message เดียวกัน
-// เพื่อปองกัน user enumeration attack
+// TestAccessToken_ErrorMessageHidden: wrong username and wrong password must return the same error message
+// to prevent user enumeration attacks
 func TestAccessToken_ErrorMessageHidden(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
@@ -160,12 +160,12 @@ func TestAccessToken_ErrorMessageHidden(t *testing.T) {
 	}
 }
 
-// TestAccessToken_SigningError: จำลอง JWT signing ล้มเหลว -> 500
+// TestAccessToken_SigningError: JWT signing failure returns 500
 func TestAccessToken_SigningError(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
 
-	// Override signingFunc เพื่อ force error
+	// Override signingFunc to force a signing error
 	original := signingFunc
 	signingFunc = func(_ *jwt.Token, _ interface{}) (string, error) {
 		return "", errors.New("signing failed")
