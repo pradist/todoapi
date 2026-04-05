@@ -8,3 +8,5 @@ test.db
 test*.txt
 
 todoapi
+
+test/hurl/vars.env
