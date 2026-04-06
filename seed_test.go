@@ -27,12 +27,12 @@ func userCount(t *testing.T, db *gorm.DB) int64 {
 	return n
 }
 
-func TestEnsureAdminUser_CreatesUser(t *testing.T) {
+func TestSeedAdminUser_CreatesUser(t *testing.T) {
 	db := openSeedTestDB(t)
 	t.Setenv("ADMIN_USER", "admin")
 	t.Setenv("ADMIN_PASS", "secret123")
 
-	ensureAdminUser(db)
+	seedAdminUser(db)
 
 	if userCount(t, db) != 1 {
 		t.Fatal("expected 1 user to be created")
@@ -48,7 +48,7 @@ func TestEnsureAdminUser_CreatesUser(t *testing.T) {
 	}
 }
 
-func TestEnsureAdminUser_SkipsWhenUsersExist(t *testing.T) {
+func TestSeedAdminUser_SkipsWhenUsersExist(t *testing.T) {
 	db := openSeedTestDB(t)
 	t.Setenv("ADMIN_USER", "admin")
 	t.Setenv("ADMIN_PASS", "secret123")
@@ -56,43 +56,43 @@ func TestEnsureAdminUser_SkipsWhenUsersExist(t *testing.T) {
 	hashed, _ := auth.HashPassword("existing")
 	db.Create(&auth.User{Username: "existing", Password: hashed})
 
-	ensureAdminUser(db)
+	seedAdminUser(db)
 
 	if userCount(t, db) != 1 {
 		t.Fatal("expected seed to be skipped when users already exist")
 	}
 }
 
-func TestEnsureAdminUser_SkipsWhenEnvMissing(t *testing.T) {
+func TestSeedAdminUser_SkipsWhenEnvMissing(t *testing.T) {
 	db := openSeedTestDB(t)
 	t.Setenv("ADMIN_USER", "")
 	t.Setenv("ADMIN_PASS", "")
 
-	ensureAdminUser(db)
+	seedAdminUser(db)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when env vars are not set")
 	}
 }
 
-func TestEnsureAdminUser_SkipsWhenOnlyUsernameMissing(t *testing.T) {
+func TestSeedAdminUser_SkipsWhenOnlyUsernameMissing(t *testing.T) {
 	db := openSeedTestDB(t)
 	t.Setenv("ADMIN_USER", "")
 	t.Setenv("ADMIN_PASS", "secret123")
 
-	ensureAdminUser(db)
+	seedAdminUser(db)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when ADMIN_USER is not set")
 	}
 }
 
-func TestEnsureAdminUser_SkipsWhenOnlyPasswordMissing(t *testing.T) {
+func TestSeedAdminUser_SkipsWhenOnlyPasswordMissing(t *testing.T) {
 	db := openSeedTestDB(t)
 	t.Setenv("ADMIN_USER", "admin")
 	t.Setenv("ADMIN_PASS", "")
 
-	ensureAdminUser(db)
+	seedAdminUser(db)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when ADMIN_PASS is not set")
