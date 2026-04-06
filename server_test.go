@@ -211,3 +211,24 @@ func TestIPLimiterFromEnv_CustomValues(t *testing.T) {
 		t.Fatalf("expected 429, got %d", w.Code)
 	}
 }
+
+// --- setupDB tests ---
+
+func TestSetupDB_Success(t *testing.T) {
+	db, err := setupDB(":memory:")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if db == nil {
+		t.Fatal("expected non-nil db")
+	}
+}
+
+func TestSetupDB_OpenError(t *testing.T) {
+	// SQLite cannot create a file inside a non-existent subdirectory
+	dsn := t.TempDir() + "/nonexistent/test.db"
+	_, err := setupDB(dsn)
+	if err == nil {
+		t.Fatal("expected error for invalid dsn, got nil")
+	}
+}

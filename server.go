@@ -41,8 +41,8 @@ func ipLimiterFromEnv() *middleware.IPLimiter {
 	return middleware.NewIPLimiter(r, burst)
 }
 
-func setupDB() (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+func setupDB(dsn string) (*gorm.DB, error) {
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}

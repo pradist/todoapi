@@ -18,7 +18,7 @@ func main() {
 		fmt.Printf("please consider environment variables: %s", err)
 	}
 
-	db, err := setupDB()
+	db, err := setupDB("test.db")
 	if err != nil {
 		panic("failed to connect database")
 	}
