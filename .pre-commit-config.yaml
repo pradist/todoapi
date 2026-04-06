@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: go-fmt
+        name: go fmt
+        language: script
+        entry: scripts/check-fmt.sh
+        types: [go]
+        pass_filenames: false
+
+      - id: go-vet
+        name: go vet
+        language: system
+        entry: go vet ./...
+        types: [go]
+        pass_filenames: false
+
+      - id: go-test
+        name: go test
+        language: system
+        entry: go test ./...
+        types: [go]
+        pass_filenames: false
+
+      - id: go-build
+        name: go build
+        language: system
+        entry: go build ./...
+        types: [go]
+        pass_filenames: false
