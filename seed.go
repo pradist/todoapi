@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func seedAdminUser(db *gorm.DB) {
+func seedAdminUser(db *gorm.DB, hashFn func(string) (string, error)) {
 	username := os.Getenv("ADMIN_USER")
 	password := os.Getenv("ADMIN_PASS")
 	if username == "" || password == "" {
@@ -22,7 +22,7 @@ func seedAdminUser(db *gorm.DB) {
 		return
 	}
 
-	hashed, err := auth.HashPassword(password)
+	hashed, err := hashFn(password)
 	if err != nil {
 		fmt.Printf("failed to hash admin password: %s\n", err)
 		return

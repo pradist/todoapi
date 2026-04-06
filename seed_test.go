@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/pradist/todoapi/auth"
@@ -32,7 +33,7 @@ func TestSeedAdminUser_CreatesUser(t *testing.T) {
 	t.Setenv("ADMIN_USER", "admin")
 	t.Setenv("ADMIN_PASS", "secret123")
 
-	seedAdminUser(db)
+	seedAdminUser(db, auth.HashPassword)
 
 	if userCount(t, db) != 1 {
 		t.Fatal("expected 1 user to be created")
@@ -56,7 +57,7 @@ func TestSeedAdminUser_SkipsWhenUsersExist(t *testing.T) {
 	hashed, _ := auth.HashPassword("existing")
 	db.Create(&auth.User{Username: "existing", Password: hashed})
 
-	seedAdminUser(db)
+	seedAdminUser(db, auth.HashPassword)
 
 	if userCount(t, db) != 1 {
 		t.Fatal("expected seed to be skipped when users already exist")
@@ -68,7 +69,7 @@ func TestSeedAdminUser_SkipsWhenEnvMissing(t *testing.T) {
 	t.Setenv("ADMIN_USER", "")
 	t.Setenv("ADMIN_PASS", "")
 
-	seedAdminUser(db)
+	seedAdminUser(db, auth.HashPassword)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when env vars are not set")
@@ -80,7 +81,7 @@ func TestSeedAdminUser_SkipsWhenOnlyUsernameMissing(t *testing.T) {
 	t.Setenv("ADMIN_USER", "")
 	t.Setenv("ADMIN_PASS", "secret123")
 
-	seedAdminUser(db)
+	seedAdminUser(db, auth.HashPassword)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when ADMIN_USER is not set")
@@ -92,9 +93,24 @@ func TestSeedAdminUser_SkipsWhenOnlyPasswordMissing(t *testing.T) {
 	t.Setenv("ADMIN_USER", "admin")
 	t.Setenv("ADMIN_PASS", "")
 
-	seedAdminUser(db)
+	seedAdminUser(db, auth.HashPassword)
 
 	if userCount(t, db) != 0 {
 		t.Fatal("expected no users when ADMIN_PASS is not set")
+	}
+}
+
+func TestSeedAdminUser_SkipsWhenHashFails(t *testing.T) {
+	db := openSeedTestDB(t)
+	t.Setenv("ADMIN_USER", "admin")
+	t.Setenv("ADMIN_PASS", "secret123")
+
+	failingHash := func(_ string) (string, error) {
+		return "", errors.New("hash error")
+	}
+	seedAdminUser(db, failingHash)
+
+	if userCount(t, db) != 0 {
+		t.Fatal("expected no users when hashing fails")
 	}
 }
