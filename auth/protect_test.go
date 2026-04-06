@@ -1,16 +1,36 @@
 package auth
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/joho/godotenv"
 )
 
-var testSecret = []byte("test_secret")
+var testSecret []byte
+var fakeRS256Token string
+
+func TestMain(m *testing.M) {
+	godotenv.Load("../.env")
+	key := os.Getenv("TEST_SIGN")
+	if key == "" {
+		key = "test_secret"
+	}
+	testSecret = []byte(key)
+
+	fakeRS256Token = os.Getenv("TEST_FAKE_RS256_TOKEN")
+	if fakeRS256Token == "" {
+		fmt.Fprintln(os.Stderr, "please set TEST_FAKE_RS256_TOKEN in your .env")
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 func setupProtectRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -116,9 +136,7 @@ func TestProtect_WrongSigningMethod(t *testing.T) {
 
 	// Craft a token with RS256 header so keyfunc rejects it
 	// header: {"alg":"RS256","typ":"JWT"} (base64-encoded)
-	fakeToken := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.invalid_sig"
-
-	w := doProtectRequest(r, "Bearer "+fakeToken)
+	w := doProtectRequest(r, "Bearer "+fakeRS256Token)
 
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", w.Code)
