@@ -1,13 +1,44 @@
 package main
 
 import (
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pradist/todoapi/auth"
 	"github.com/pradist/todoapi/middleware"
 	"github.com/pradist/todoapi/todo"
+	"golang.org/x/time/rate"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+// ipLimiterFromEnv builds an IPLimiter from environment variables.
+//
+//	RATE_LIMIT  - requests per minute per IP (default: 5; set to 0 to disable)
+//	RATE_BURST  - maximum burst size (default: 5)
+func ipLimiterFromEnv() *middleware.IPLimiter {
+	limitPerMin := 5
+	burst := 5
+
+	if v := os.Getenv("RATE_LIMIT"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			limitPerMin = n
+		}
+	}
+	if v := os.Getenv("RATE_BURST"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			burst = n
+		}
+	}
+
+	if limitPerMin == 0 {
+		return middleware.NewIPLimiter(rate.Inf, 0)
+	}
+	r := rate.Every(time.Minute / time.Duration(limitPerMin))
+	return middleware.NewIPLimiter(r, burst)
+}
 
 func setupDB() (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})

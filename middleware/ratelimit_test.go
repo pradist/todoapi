@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/time/rate"
 )
 
 func TestMain(m *testing.M) {
@@ -21,8 +22,12 @@ func newTestRouter(limiter *IPLimiter) *gin.Engine {
 	return r
 }
 
+func newLimiter() *IPLimiter {
+	return NewIPLimiter(5, 5) // 5 req/min, burst 5
+}
+
 func TestNewIPLimiter(t *testing.T) {
-	l := NewIPLimiter()
+	l := newLimiter()
 	if l == nil {
 		t.Fatal("expected non-nil IPLimiter")
 	}
@@ -32,7 +37,7 @@ func TestNewIPLimiter(t *testing.T) {
 }
 
 func TestGet_SameIPReturnsSameLimiter(t *testing.T) {
-	l := NewIPLimiter()
+	l := newLimiter()
 	first := l.get("1.2.3.4")
 	second := l.get("1.2.3.4")
 	if first != second {
@@ -41,7 +46,7 @@ func TestGet_SameIPReturnsSameLimiter(t *testing.T) {
 }
 
 func TestGet_DifferentIPsReturnDifferentLimiters(t *testing.T) {
-	l := NewIPLimiter()
+	l := newLimiter()
 	a := l.get("1.1.1.1")
 	b := l.get("2.2.2.2")
 	if a == b {
@@ -50,7 +55,7 @@ func TestGet_DifferentIPsReturnDifferentLimiters(t *testing.T) {
 }
 
 func TestRateLimitMiddleware_AllowsWithinBurst(t *testing.T) {
-	r := newTestRouter(NewIPLimiter())
+	r := newTestRouter(newLimiter())
 
 	// burst is 5, all 5 requests should pass
 	for i := 0; i < 5; i++ {
@@ -65,7 +70,7 @@ func TestRateLimitMiddleware_AllowsWithinBurst(t *testing.T) {
 }
 
 func TestRateLimitMiddleware_BlocksAfterBurst(t *testing.T) {
-	r := newTestRouter(NewIPLimiter())
+	r := newTestRouter(newLimiter())
 
 	// exhaust the burst of 5
 	for i := 0; i < 5; i++ {
@@ -85,8 +90,22 @@ func TestRateLimitMiddleware_BlocksAfterBurst(t *testing.T) {
 	}
 }
 
+func TestRateLimitMiddleware_Disabled_AllowsAllRequests(t *testing.T) {
+	r := newTestRouter(NewIPLimiter(rate.Inf, 0)) // disabled
+
+	for i := 0; i < 20; i++ {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
+		req.RemoteAddr = "10.0.0.5:1234"
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("request %d: expected 200 when disabled, got %d", i+1, w.Code)
+		}
+	}
+}
+
 func TestRateLimitMiddleware_DifferentIPsAreIndependent(t *testing.T) {
-	limiter := NewIPLimiter()
+	limiter := newLimiter()
 	r := newTestRouter(limiter)
 
 	// exhaust IP A

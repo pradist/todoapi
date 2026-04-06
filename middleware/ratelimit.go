@@ -3,7 +3,6 @@ package middleware
 import (
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
@@ -13,21 +12,28 @@ import (
 type IPLimiter struct {
 	mu       sync.Mutex
 	limiters map[string]*rate.Limiter
+	r        rate.Limit
+	burst    int
 }
 
-func NewIPLimiter() *IPLimiter {
-	return &IPLimiter{limiters: make(map[string]*rate.Limiter)}
+// NewIPLimiter creates a limiter allowing r tokens/sec with the given burst size.
+// Pass rate.Inf as r to disable limiting entirely (useful for load testing).
+func NewIPLimiter(r rate.Limit, burst int) *IPLimiter {
+	return &IPLimiter{
+		limiters: make(map[string]*rate.Limiter),
+		r:        r,
+		burst:    burst,
+	}
 }
 
 // get returns (or creates) a limiter for the given IP.
-// Allows 5 requests per minute with a burst of 5.
 func (l *IPLimiter) get(ip string) *rate.Limiter {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if lim, ok := l.limiters[ip]; ok {
 		return lim
 	}
-	lim := rate.NewLimiter(rate.Every(time.Minute/5), 5)
+	lim := rate.NewLimiter(l.r, l.burst)
 	l.limiters[ip] = lim
 	return lim
 }

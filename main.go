@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
-
-	"github.com/pradist/todoapi/middleware"
 )
 
 func main() {
@@ -25,7 +23,7 @@ func main() {
 		panic("failed to connect database")
 	}
 
-	r := setupRouter(db, os.Getenv("SIGN"), middleware.NewIPLimiter())
+	r := setupRouter(db, os.Getenv("SIGN"), ipLimiterFromEnv())
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
