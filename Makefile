@@ -11,11 +11,14 @@ test:
 
 coverage:
 	go test ./... -coverprofile=coverage.out
-	go tool cover -func=coverage.out
+# 	grep -v "main.go" coverage.out > coverage_filtered.out
+# 	go tool cover -func=coverage_filtered.out
 
 coverage-html:
 	go test ./... -coverprofile=coverage.out
 	go tool cover -html=coverage.out
+# 	grep -v "main.go" coverage.out > coverage_filtered.out
+# 	go tool cover -html=coverage_filtered.out
 
 lint:
 	pre-commit run --all-files
