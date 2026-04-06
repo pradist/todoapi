@@ -29,7 +29,6 @@ A simple RESTful API for managing todo items, built with Go. It features credent
 │   ├── todo.go           # Todo model and handler
 │   └── todo_test.go      # Unit tests for NewTask handler
 ├── test/
-│   ├── *.http            # HTTP request samples (VS Code httpYac)
 │   └── hurl/             # Hurl integration test files
 │       ├── 01_health.hurl
 │       ├── 02_auth.hurl
