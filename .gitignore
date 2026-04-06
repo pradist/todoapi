@@ -4,7 +4,7 @@
 
 coverage*
 
-test.db
+todo.db
 test*.txt
 
 todoapi
