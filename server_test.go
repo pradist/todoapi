@@ -70,7 +70,7 @@ func TestSetupRouter_Ping(t *testing.T) {
 	r := setupRouter(db, "secret", noLimiter())
 
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -78,8 +78,8 @@ func TestSetupRouter_Ping(t *testing.T) {
 	}
 	var body map[string]string
 	json.NewDecoder(w.Body).Decode(&body)
-	if body["message"] != "pong" {
-		t.Errorf("expected message=pong, got %q", body["message"])
+	if body["status"] != "ok" {
+		t.Errorf("expected status=ok, got %q", body["status"])
 	}
 }
 
@@ -174,7 +174,7 @@ func TestIPLimiterFromEnv_Disabled(t *testing.T) {
 	// 20 requests should all pass when limiting is disabled
 	for i := 0; i < 20; i++ {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+		req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 		req.RemoteAddr = "10.0.0.1:1234"
 		r.ServeHTTP(w, req)
 		if w.Code != http.StatusOK {
@@ -311,10 +311,10 @@ func TestStartServer_ServesRequestsBeforeShutdown(t *testing.T) {
 
 	// Verify the router itself responds correctly (without going through startServer's port)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 from /ping, got %d", w.Code)
+		t.Fatalf("expected 200 from /healthz, got %d", w.Code)
 	}
 	cancel()
 }

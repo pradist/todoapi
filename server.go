@@ -56,8 +56,8 @@ func setupDB(dsn string) (*gorm.DB, error) {
 
 func setupRouter(db *gorm.DB, sign string, limiter *middleware.IPLimiter) *gin.Engine {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{"message": "pong"})
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
 	})
 	r.POST("/tokenz", middleware.RateLimitMiddleware(limiter), auth.AccessToken(db, sign, func(token *jwt.Token, key any) (string, error) {
 		return token.SignedString(key)

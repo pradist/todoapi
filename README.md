@@ -92,13 +92,13 @@ The server will start at `http://localhost:<PORT>`.
 ### Health Check
 
 ``` bash
-GET /ping
+GET /healthz
 ```
 
 Response:
 
 ```json
-{ "message": "pong" }
+{ "status": "ok" }
 ```
 
 ### Get Access Token

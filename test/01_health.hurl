@@ -1,6 +1,6 @@
 # Health check
-GET {{base_url}}/ping
+GET {{base_url}}/healthz
 
 HTTP 200
 [Asserts]
-jsonpath "$.message" == "pong"
+jsonpath "$.status" == "ok"
