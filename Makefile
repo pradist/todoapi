@@ -1,4 +1,4 @@
-.PHONY: run build test coverage coverage-html lint
+.PHONY: run build test coverage coverage-html lint hurl
 
 run:
 	go run .
@@ -19,3 +19,6 @@ coverage-html:
 
 lint:
 	pre-commit run --all-files
+
+hurl:
+	hurl --variables-file test/vars.env test/01_health.hurl test/02_auth.hurl test/03_todos.hurl
