@@ -59,7 +59,7 @@ func setupRouter(db *gorm.DB, sign string, limiter *middleware.IPLimiter) *gin.E
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
-	r.POST("/tokenz", middleware.RateLimitMiddleware(limiter), auth.AccessToken(db, sign, func(token *jwt.Token, key interface{}) (string, error) {
+	r.POST("/tokenz", middleware.RateLimitMiddleware(limiter), auth.AccessToken(db, sign, func(token *jwt.Token, key any) (string, error) {
 		return token.SignedString(key)
 	}))
 	protected := r.Group("", auth.Protect([]byte(sign)))

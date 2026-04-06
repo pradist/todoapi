@@ -41,7 +41,7 @@ func TestNewTask_Success(t *testing.T) {
 	handler, router := setupTestHandler(t)
 	router.POST("/todos", handler.NewTask)
 
-	todo := map[string]interface{}{
+	todo := map[string]any{
 		"text": "Test todo item",
 	}
 
@@ -56,7 +56,7 @@ func TestNewTask_Success(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusCreated, w.Code)
 	}
 
-	var response map[string]interface{}
+	var response map[string]any
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
@@ -71,7 +71,7 @@ func TestNewTask_EmptyTitle(t *testing.T) {
 	handler, router := setupTestHandler(t)
 	router.POST("/todos", handler.NewTask)
 
-	todo := map[string]interface{}{
+	todo := map[string]any{
 		"text": "",
 	}
 
@@ -103,7 +103,7 @@ func TestNewTask_InvalidJSON(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusBadRequest, w.Code)
 	}
 
-	var response map[string]interface{}
+	var response map[string]any
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)
@@ -118,7 +118,7 @@ func TestNewTask_MissingContentType(t *testing.T) {
 	handler, router := setupTestHandler(t)
 	router.POST("/todos", handler.NewTask)
 
-	todo := map[string]interface{}{
+	todo := map[string]any{
 		"text": "Test todo",
 	}
 
@@ -149,7 +149,7 @@ func TestNewTask_MultipleItems(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			todo := map[string]interface{}{
+			todo := map[string]any{
 				"text": tc.text,
 			}
 
@@ -164,7 +164,7 @@ func TestNewTask_MultipleItems(t *testing.T) {
 				t.Errorf("expected status %d, got %d", http.StatusCreated, w.Code)
 			}
 
-			var response map[string]interface{}
+			var response map[string]any
 			err := json.Unmarshal(w.Body.Bytes(), &response)
 			if err != nil {
 				t.Fatalf("failed to unmarshal response: %v", err)
@@ -181,7 +181,7 @@ func TestTodoHandler_DatabasePersistence(t *testing.T) {
 	handler, router := setupTestHandler(t)
 	router.POST("/todos", handler.NewTask)
 
-	todo := map[string]interface{}{
+	todo := map[string]any{
 		"text": "Persistent todo",
 	}
 
@@ -196,7 +196,7 @@ func TestTodoHandler_DatabasePersistence(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusCreated, w.Code)
 	}
 
-	var response map[string]interface{}
+	var response map[string]any
 	json.Unmarshal(w.Body.Bytes(), &response)
 
 	todoID := response["ID"]
@@ -235,7 +235,7 @@ func TestNewTask_DatabaseError(t *testing.T) {
 	router := gin.New()
 	router.POST("/todos", handler.NewTask)
 
-	todo := map[string]interface{}{
+	todo := map[string]any{
 		"text": "This should fail",
 	}
 
@@ -250,7 +250,7 @@ func TestNewTask_DatabaseError(t *testing.T) {
 		t.Errorf("expected status %d, got %d", http.StatusInternalServerError, w.Code)
 	}
 
-	var response map[string]interface{}
+	var response map[string]any
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	if err != nil {
 		t.Fatalf("failed to unmarshal response: %v", err)

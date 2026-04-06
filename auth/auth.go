@@ -15,7 +15,7 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func createToken(userID uint, signature string, signFn func(*jwt.Token, interface{}) (string, error)) (string, error) {
+func createToken(userID uint, signature string, signFn func(*jwt.Token, any) (string, error)) (string, error) {
 	claims := &jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
 		IssuedAt:  time.Now().Unix(),
@@ -26,7 +26,7 @@ func createToken(userID uint, signature string, signFn func(*jwt.Token, interfac
 	return signFn(token, []byte(signature))
 }
 
-func AccessToken(db *gorm.DB, signature string, signFn func(*jwt.Token, interface{}) (string, error)) gin.HandlerFunc {
+func AccessToken(db *gorm.DB, signature string, signFn func(*jwt.Token, any) (string, error)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req loginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {

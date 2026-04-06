@@ -37,7 +37,7 @@ func seedUser(t *testing.T, db *gorm.DB, username, password string) {
 	}
 }
 
-func defaultSignFn(token *jwt.Token, key interface{}) (string, error) {
+func defaultSignFn(token *jwt.Token, key any) (string, error) {
 	return token.SignedString(key)
 }
 
@@ -169,7 +169,7 @@ func TestAccessToken_SigningError(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
 
-	failingSignFn := func(_ *jwt.Token, _ interface{}) (string, error) {
+	failingSignFn := func(_ *jwt.Token, _ any) (string, error) {
 		return "", errors.New("signing failed")
 	}
 	r := gin.New()
