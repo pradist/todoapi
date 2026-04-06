@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -63,4 +66,28 @@ func setupRouter(db *gorm.DB, sign string, limiter *middleware.IPLimiter) *gin.E
 	handler := todo.NewTodoHandler(db)
 	protected.POST("/todos", handler.NewTask)
 	return r
+}
+
+func startServer(ctx context.Context, r http.Handler, addr string) error {
+	s := &http.Server{
+		Addr:           addr,
+		Handler:        r,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	go func() {
+		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("listen: %s\n", err)
+		}
+	}()
+
+	<-ctx.Done()
+	fmt.Println("Shutting down gracefully, press Ctrl+C again to force")
+
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.Shutdown(ctxTimeout)
 }
