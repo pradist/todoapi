@@ -29,12 +29,11 @@ A simple RESTful API for managing todo items, built with Go. It features credent
 │   ├── todo.go           # Todo model and handler
 │   └── todo_test.go      # Unit tests for NewTask handler
 ├── test/
-│   └── hurl/             # Hurl integration test files
-│       ├── 01_health.hurl
-│       ├── 02_auth.hurl
-│       ├── 03_todos.hurl
-│       ├── vars.env          # Local variables (not committed)
-│       └── vars.env.example  # Variable template
+│   ├── 01_health.hurl
+│   ├── 02_auth.hurl
+│   ├── 03_todos.hurl
+│   ├── vars.env          # Local variables (not committed)
+│   └── vars.env.example  # Variable template
 ├── scripts/
 │   └── check-fmt.sh      # gofmt check script used by pre-commit
 ├── .pre-commit-config.yaml
@@ -177,13 +176,13 @@ Requires the server to be running and [Hurl](https://hurl.dev/) installed.
 
 ```bash
 # copy and fill in your values
-cp test/hurl/vars.env.example test/hurl/vars.env
+cp test/vars.env.example test/vars.env
 
 # run all integration tests
-hurl --variables-file test/hurl/vars.env --test test/hurl/*.hurl
+hurl --variables-file test/vars.env --test test/*.hurl
 
 # run with HTML report
-hurl --variables-file test/hurl/vars.env --test --report-html report/ test/hurl/*.hurl
+hurl --variables-file test/vars.env --test --report-html report/ test/*.hurl
 ```
 
 ## Pre-commit Hooks

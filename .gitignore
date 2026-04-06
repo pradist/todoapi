@@ -9,4 +9,4 @@ test*.txt
 
 todoapi
 
-test/hurl/vars.env
+test/vars.env
