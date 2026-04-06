@@ -22,6 +22,9 @@ jobs:
         run: go build ./...
 
       - name: Test
+        env:
+          TEST_SIGN: ${{ secrets.TEST_SIGN }}
+          TEST_FAKE_RS256_TOKEN: ${{ secrets.TEST_FAKE_RS256_TOKEN }}
         run: go test ./... -coverprofile=coverage.out
 
       - name: Coverage report
