@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/pradist/todoapi/auth"
 	"github.com/pradist/todoapi/middleware"
 	"github.com/pradist/todoapi/todo"
@@ -55,7 +56,9 @@ func setupRouter(db *gorm.DB, sign string, limiter *middleware.IPLimiter) *gin.E
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "pong"})
 	})
-	r.POST("/tokenz", middleware.RateLimitMiddleware(limiter), auth.AccessToken(db, sign))
+	r.POST("/tokenz", middleware.RateLimitMiddleware(limiter), auth.AccessToken(db, sign, func(token *jwt.Token, key interface{}) (string, error) {
+		return token.SignedString(key)
+	}))
 	protected := r.Group("", auth.Protect([]byte(sign)))
 	handler := todo.NewTodoHandler(db)
 	protected.POST("/todos", handler.NewTask)

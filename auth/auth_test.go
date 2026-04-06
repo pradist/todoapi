@@ -37,10 +37,14 @@ func seedUser(t *testing.T, db *gorm.DB, username, password string) {
 	}
 }
 
+func defaultSignFn(token *jwt.Token, key interface{}) (string, error) {
+	return token.SignedString(key)
+}
+
 func setupAuthRouter(db *gorm.DB) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/tokenz", AccessToken(db, "test_secret"))
+	r.POST("/tokenz", AccessToken(db, "test_secret", defaultSignFn))
 	return r
 }
 
@@ -129,7 +133,7 @@ func TestAccessToken_InvalidJSON(t *testing.T) {
 	db := setupAuthTestDB(t)
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.POST("/tokenz", AccessToken(db, "test_secret"))
+	r.POST("/tokenz", AccessToken(db, "test_secret", defaultSignFn))
 
 	req := httptest.NewRequest(http.MethodPost, "/tokenz", bytes.NewBufferString(`{invalid}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -165,14 +169,12 @@ func TestAccessToken_SigningError(t *testing.T) {
 	db := setupAuthTestDB(t)
 	seedUser(t, db, "alice", "secret123")
 
-	// Override signingFunc to force a signing error
-	original := signingFunc
-	signingFunc = func(_ *jwt.Token, _ interface{}) (string, error) {
+	failingSignFn := func(_ *jwt.Token, _ interface{}) (string, error) {
 		return "", errors.New("signing failed")
 	}
-	defer func() { signingFunc = original }()
-
-	r := setupAuthRouter(db)
+	r := gin.New()
+	gin.SetMode(gin.TestMode)
+	r.POST("/tokenz", AccessToken(db, "test_secret", failingSignFn))
 	w := doTokenRequest(t, r, map[string]string{"username": "alice", "password": "secret123"})
 
 	if w.Code != http.StatusInternalServerError {

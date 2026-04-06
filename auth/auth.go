@@ -15,12 +15,7 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-// signingFunc wraps token.SignedString so it can be overridden in tests.
-var signingFunc = func(token *jwt.Token, key interface{}) (string, error) {
-	return token.SignedString(key)
-}
-
-func createToken(userID uint, signature string) (string, error) {
+func createToken(userID uint, signature string, signFn func(*jwt.Token, interface{}) (string, error)) (string, error) {
 	claims := &jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(5 * time.Minute).Unix(),
 		IssuedAt:  time.Now().Unix(),
@@ -28,10 +23,10 @@ func createToken(userID uint, signature string) (string, error) {
 		Subject:   strconv.FormatUint(uint64(userID), 10),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return signingFunc(token, []byte(signature))
+	return signFn(token, []byte(signature))
 }
 
-func AccessToken(db *gorm.DB, signature string) gin.HandlerFunc {
+func AccessToken(db *gorm.DB, signature string, signFn func(*jwt.Token, interface{}) (string, error)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req loginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -50,7 +45,7 @@ func AccessToken(db *gorm.DB, signature string) gin.HandlerFunc {
 			return
 		}
 
-		token, err := createToken(user.ID, signature)
+		token, err := createToken(user.ID, signature, signFn)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
