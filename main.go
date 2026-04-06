@@ -76,35 +76,40 @@ func seedAdminUser(db *gorm.DB) {
 	fmt.Println("Admin user seeded")
 }
 
-func main() {
+func setupDB() (*gorm.DB, error) {
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	db.AutoMigrate(&todo.Todo{}, &auth.User{})
+	seedAdminUser(db)
+	return db, nil
+}
 
+func setupRouter(db *gorm.DB, sign string, limiter *ipLimiter) *gin.Engine {
+	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong"})
+	})
+	r.POST("/tokenz", rateLimitMiddleware(limiter), auth.AccessToken(db, sign))
+	protected := r.Group("", auth.Protect([]byte(sign)))
+	handler := todo.NewTodoHandler(db)
+	protected.POST("/todos", handler.NewTask)
+	return r
+}
+
+func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Printf("please consider environment variables: %s", err)
 	}
 
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := setupDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&todo.Todo{}, &auth.User{})
-	seedAdminUser(db)
-
-	limiter := newIPLimiter()
-
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.POST("/tokenz", rateLimitMiddleware(limiter), auth.AccessToken(db, os.Getenv("SIGN")))
-	protected := r.Group("", auth.Protect([]byte(os.Getenv("SIGN"))))
-
-	handler := todo.NewTodoHandler(db)
-	protected.POST("/todos", handler.NewTask)
+	r := setupRouter(db, os.Getenv("SIGN"), newIPLimiter())
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -135,5 +140,4 @@ func main() {
 	}
 
 	fmt.Println("Server exiting")
-
 }
