@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func seedAdminUser(db *gorm.DB) {
+func ensureAdminUser(db *gorm.DB) {
 	username := os.Getenv("ADMIN_USER")
 	password := os.Getenv("ADMIN_PASS")
 	if username == "" || password == "" {

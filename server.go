@@ -46,7 +46,7 @@ func setupDB() (*gorm.DB, error) {
 		return nil, err
 	}
 	db.AutoMigrate(&todo.Todo{}, &auth.User{})
-	seedAdminUser(db)
+	ensureAdminUser(db)
 	return db, nil
 }
 
