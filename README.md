@@ -17,17 +17,33 @@ A simple RESTful API for managing todo items, built with Go. It features credent
 
 ``` text
 .
-├── main.go          # Entry point — server setup, routing, graceful shutdown
+├── main.go               # Entry point — server setup, routing, graceful shutdown
 ├── auth/
-│   ├── auth.go      # POST /tokenz handler — credential validation + JWT issuance
-│   ├── protect.go   # JWT middleware for protected routes
-│   └── user.go      # User GORM model, HashPassword, CheckPassword (bcrypt)
+│   ├── auth.go           # POST /tokenz handler — credential validation + JWT issuance
+│   ├── auth_test.go      # Unit tests for AccessToken handler
+│   ├── protect.go        # JWT middleware for protected routes
+│   ├── protect_test.go   # Unit tests for Protect middleware
+│   ├── user.go           # User GORM model, HashPassword, CheckPassword (bcrypt)
+│   └── user_test.go      # Unit tests for password hashing helpers
 ├── todo/
-│   ├── todo.go      # Todo model and handler
-│   └── todo_test.go # Unit tests
-├── test/            # HTTP request samples (VS Code REST Client)
+│   ├── todo.go           # Todo model and handler
+│   └── todo_test.go      # Unit tests for NewTask handler
+├── test/
+│   ├── *.http            # HTTP request samples (VS Code httpYac)
+│   └── hurl/             # Hurl integration test files
+│       ├── 01_health.hurl
+│       ├── 02_auth.hurl
+│       ├── 03_todos.hurl
+│       ├── vars.env          # Local variables (not committed)
+│       └── vars.env.example  # Variable template
+├── scripts/
+│   └── check-fmt.sh      # gofmt check script used by pre-commit
+├── .pre-commit-config.yaml
+├── .github/
+│   └── workflows/
+│       └── integration.yml  # GitHub Actions — integration tests via Hurl
 ├── go.mod
-└── .env             # Environment variables (not committed)
+└── .env                  # Environment variables (not committed)
 ```
 
 ## Environment Variables
@@ -39,14 +55,18 @@ PORT=8081
 SIGN=your_jwt_secret_key
 ADMIN_USER=admin
 ADMIN_PASS=your_admin_password
+TEST_SIGN=your_test_jwt_secret
+TEST_FAKE_RS256_TOKEN=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.invalid_sig
 ```
 
-| Variable     | Description                                                        |
-|--------------|--------------------------------------------------------------------|
-| `PORT`       | Port the server listens on                                         |
-| `SIGN`       | Secret key used to sign JWT tokens (use a strong random string)    |
-| `ADMIN_USER` | Username for the seeded admin account                              |
-| `ADMIN_PASS` | Password for the seeded admin account (stored as bcrypt hash in DB)|
+| Variable                | Description                                                          |
+|-------------------------|----------------------------------------------------------------------|
+| `PORT`                  | Port the server listens on                                           |
+| `SIGN`                  | Secret key used to sign JWT tokens (use a strong random string)      |
+| `ADMIN_USER`            | Username for the seeded admin account                                |
+| `ADMIN_PASS`            | Password for the seeded admin account (stored as bcrypt hash in DB)  |
+| `TEST_SIGN`             | Secret key used when signing tokens in tests                         |
+| `TEST_FAKE_RS256_TOKEN` | A JWT with RS256 header used in the wrong-signing-method test        |
 
 ## Getting Started
 
@@ -146,8 +166,51 @@ Response `201 Created`:
 
 ## Running Tests
 
+### Unit tests
+
 ```bash
 go test ./...
+```
+
+### Integration tests (Hurl)
+
+Requires the server to be running and [Hurl](https://hurl.dev/) installed.
+
+```bash
+# copy and fill in your values
+cp test/hurl/vars.env.example test/hurl/vars.env
+
+# run all integration tests
+hurl --variables-file test/hurl/vars.env --test test/hurl/*.hurl
+
+# run with HTML report
+hurl --variables-file test/hurl/vars.env --test --report-html report/ test/hurl/*.hurl
+```
+
+## Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to enforce code quality before every commit.
+
+**Install once:**
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Hooks that run on every `git commit`:
+
+| Hook | What it checks |
+| ---- | -------------- |
+| `go-fmt` | All files are formatted with `gofmt` |
+| `go-vet` | No issues found by `go vet` |
+| `go-test` | All unit tests pass |
+| `go-build` | Project compiles successfully |
+
+**Run manually against all files:**
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Graceful Shutdown
