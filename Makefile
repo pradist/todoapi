@@ -27,4 +27,4 @@ hurl:
 	hurl --variables-file test/vars.env test/hurl/01_health.hurl test/hurl/02_auth.hurl test/hurl/03_todos.hurl
 
 httpyac:
-	httpyac send test/httpyac/*.http --all -e local -e local
+	httpyac send test/httpyac/*.http --all
