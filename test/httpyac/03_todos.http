@@ -1,0 +1,27 @@
+# Step 1: Login and capture token
+POST {{base_url}}/tokenz
+Content-Type: application/json
+
+{
+  "username": "{{admin_user}}",
+  "password": "{{admin_pass}}"
+}
+
+?? status == 200
+{{
+  exports.token = response.parsedBody.token;
+}}
+
+###
+
+# Step 2: Create todo with valid token returns 201
+POST {{base_url}}/todos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "integration test item"
+}
+
+?? status == 201
+?? Number.isInteger(response.parsedBody.ID)

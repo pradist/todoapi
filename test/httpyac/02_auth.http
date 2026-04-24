@@ -1,0 +1,38 @@
+# Valid credentials return a token
+POST {{base_url}}/tokenz
+Content-Type: application/json
+
+{
+  "username": "{{admin_user}}",
+  "password": "{{admin_pass}}"
+}
+
+?? status == 200
+?? typeof response.parsedBody.token === "string"
+?? response.parsedBody.token !== ""
+
+###
+
+# Wrong password returns 401
+POST {{base_url}}/tokenz
+Content-Type: application/json
+
+{
+  "username": "{{admin_user}}",
+  "password": "wrongpassword"
+}
+
+?? status == 401
+?? response.parsedBody.error === "invalid credentials"
+
+###
+
+# Missing required field returns 400
+POST {{base_url}}/tokenz
+Content-Type: application/json
+
+{
+  "username": "{{admin_user}}"
+}
+
+?? status == 400

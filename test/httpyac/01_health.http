@@ -1,0 +1,5 @@
+# Health check
+GET {{base_url}}/healthz
+
+?? status == 200
+?? body.status === "ok"
